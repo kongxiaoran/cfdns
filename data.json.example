@@ -1,0 +1,40 @@
+{
+  "port": "8082",
+  "nodeCollection": [
+    {
+      "name": "节点1",
+      "dnsName": "node1.example.com",
+      "forwardName": "target.example.com#CNAME",
+      "provider": "cloudflare"
+    },
+    {
+      "name": "节点2",
+      "dnsName": "node2.example.com",
+      "forwardName": "target2.example.com#CNAME",
+      "provider": "aliyun"
+    }
+  ],
+  "forwardCollection": [
+    {
+      "name": "转发目标1",
+      "forwardName": "forward1.example.com",
+      "hostType": "CNAME"
+    },
+    {
+      "name": "转发目标2",
+      "forwardName": "forward2.example.com",
+      "hostType": "CNAME"
+    }
+  ],
+  "providerConfigs": {
+    "cloudflare": {
+      "email": "your-email@example.com",
+      "key": "your-cloudflare-api-key",
+      "zoneID": "your-zone-id"
+    },
+    "aliyun": {
+      "accessKeyId": "your-access-key-id",
+      "accessKeySecret": "your-access-key-secret"
+    }
+  }
+}

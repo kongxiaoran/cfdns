@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+
+        #contentList {
+            list-style: none;
+            padding: 0;
+        }
+
+        #contentList div {
+            background: white;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        select {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            width: 120px;
+            text-align: center;
+            text-align-last: center;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #007BFF;
+        }
+
+        #contentList div:nth-child(4n+1),
+        #contentList div:nth-child(4n+3) {
+            background-color: #e8ccff;
+        }
+
+        #contentList div:nth-child(4n+2),
+        #contentList div:nth-child(4n+4) {
+            background-color: #cceeff;
+        }
+
+        #messageContainer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .message {
+            padding: 10px 20px;
+            background-color: grey;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="contentList"></div>
+    <div id="messageContainer"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            getPageDate()
+        });
+
+        function handleSelectChange(event, itemIndex, dnsName) {
+            const forwardTarget = event.target.value;
+            if (forwardTarget) {
+                const forwardInfo = forwardTarget.split('#');
+                updateData('/api?dnsName=' + dnsName +
+                    '&forwardName=' + forwardInfo[0] +
+                    '&id=' + itemIndex +
+                    '&hostType=' + forwardInfo[1])
+            }
+        }
+
+        function getPageDate() {
+            fetch('/page-date')
+                .then(response => {
+                    if (!response.ok) {
+                        showMessage('呜呜 获取页面失败 ··')
+                        throw new Error('网络请求错误, 状态码：' + response.status);
+                    } else {
+                        return response.json()
+                    }
+                }).then(data => {
+                    displayData(data);
+                }).catch(error => {
+                    console.error('获取数据出错:', error);
+                })
+        }
+
+        function displayData(data) {
+            const contentList = document.getElementById('contentList');
+
+            var forwordOptionDOM = ''
+            data.forwardCollection.forEach((item, index) => {
+                forwordOptionDOM = forwordOptionDOM + ` <option value="${item.forwardName}#${item.hostType}">${item.name}</option> `
+            })
+            data.nodeCollection.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <span>${item.name}</span>
+                    <select id="select_${index}" onchange="handleSelectChange(event, ${index}, '${item.dnsName}')">
+                        <option value="">请选择</option>
+                    ` + forwordOptionDOM + `
+                    </select>
+                `;
+                contentList.appendChild(div);
+
+                if (item.forwardName) {
+                    const selectElement = document.getElementById(`select_${index}`);
+                    const selectedValue = `${item.forwardName}`;
+                    selectElement.value = selectedValue;
+                }
+            });
+        }
+
+        function updateData(url) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        showMessage('呜呜 更新失败 ··')
+                        throw new Error('网络请求错误, 状态码：' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    showMessage('更新成功～')
+                })
+                .catch(error => {
+                    console.error('获取数据失败:', error);
+                    showMessage('呜呜 更新失败 ··')
+                });
+        }
+
+        function showMessage(text) {
+            const messageEl = document.createElement('div');
+            messageEl.classList.add('message');
+            messageEl.textContent = text;
+            messageEl.style.opacity = 1;
+
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.appendChild(messageEl);
+
+            setTimeout(() => {
+                messageEl.style.opacity = 0;
+                setTimeout(() => messageEl.remove(), 300);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
